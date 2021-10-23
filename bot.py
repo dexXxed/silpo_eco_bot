@@ -7,6 +7,7 @@ from pyzbar.pyzbar import decode
 import cv2
 import pandas as pd
 from dotenv import load_dotenv
+from tinydb import TinyDB, Query
 
 load_dotenv()
 
@@ -14,6 +15,8 @@ logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=os.getenv('TOKEN'))
 dp = Dispatcher(bot)
+db = TinyDB('db.json')
+
 barcodes = pd.read_csv('barcodes.csv')
 
 
@@ -42,6 +45,13 @@ async def send_welcome(message: types.Message):
 /trash_info для отримання списку допустимої вторсировини ♻
 /prepare_trash відповідає на питання <b>"Як підготувати вторсировину для переробки?"</b> 🏡
 """
+    user = Query()
+    if not db.search(user.username == message.from_user.id):
+        db.insert({'username': message.from_user.id,
+                   'metal': 0,
+                   'paper': 0,
+                   'glass': 0,
+                   'plastic': 0})
     await message.answer(response, parse_mode=ParseMode.HTML)\
 
 
@@ -112,6 +122,9 @@ async def get_type_of_barcode(message: types.Message):
 
     if bar_code != '':
         if not barcodes[barcodes['id'].str.contains(bar_code)].empty:
+            user = Query()
+            db.update({f'{barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]}': db.search(user.username == message.from_user.id)[0][f'{barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]}'] + 1 }, user.username == message.from_user.id)
+
             await message.reply(f"Название товара: {barcodes[barcodes['id'].str.contains(bar_code)].min()['name']}\n"
                                 f"Тип товара: {barcodes[barcodes['id'].str.contains(bar_code)].min()['class']}",
                                 parse_mode=ParseMode.HTML)
@@ -120,6 +133,20 @@ async def get_type_of_barcode(message: types.Message):
     else:
         await message.reply("Повторите фото, считывание не удалось!")
 
+
+@dp.message_handler(commands=['stats'])
+async def stats(message: types.Message):
+    user = Query()
+    await message.reply(f"""Вами було накопичено загалом {db.search(user.username == message.from_user.id)[0]['paper'] + db.search(user.username == message.from_user.id)[0]['plastic'] + db.search(user.username == message.from_user.id)[0]['metal'] + db.search(user.username == message.from_user.id)[0]['glass']} перерабатываемых продуктов: 
+
+ПАПЕРУ 📰: {db.search(user.username == message.from_user.id)[0]['paper']} шт.
+
+ПЛАСТИК ♳: {db.search(user.username == message.from_user.id)[0]['plastic']} шт.
+
+МЕТАЛ 🥫: {db.search(user.username == message.from_user.id)[0]['metal']} шт.
+
+СКЛО 🍾: {db.search(user.username == message.from_user.id)[0]['glass']} шт.
+""")
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=False)
