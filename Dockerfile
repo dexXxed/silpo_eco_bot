@@ -5,6 +5,8 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install zbar
+RUN apt-get install zbar-tools
+
 
 COPY . .
 
