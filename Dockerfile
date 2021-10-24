@@ -1,9 +1,11 @@
-FROM ghego/docker-ubuntu-zbar
+FROM ubuntu
 
 RUN apt-get update && apt-get install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y python3.7 python3-pip python3.7-dev
 RUN apt-get install -y git wget gcc python3.7-dev unzip zbar-tools zbar-dbg
+RUN apt-get install -y zlib1g-dev libjpeg-dev libwebp-dev libpng-dev libtiff5-dev libjasper-dev libopenexr-dev libgdal-dev
+
 
 RUN python3.7 -m pip install pip
 RUN apt-get update && apt-get install -y python3-distutils python3-setuptools
