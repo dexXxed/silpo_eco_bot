@@ -55,7 +55,8 @@ async def send_welcome(message: types.Message):
                    'paper': 0,
                    'glass': 0,
                    'plastic': 0,
-                   'bonus': 0})
+                   'bonus': 0,
+                   'bonus_verified': 0})
     await message.answer(response, parse_mode=ParseMode.HTML)
     await bot.send_photo(message.from_user.id, open('./photos/example.jpg', 'rb'),
                          caption='Приклад фото для сканування ботом 👀')
@@ -133,8 +134,6 @@ async def get_type_of_barcode(message: types.Message):
                            [f'{barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]}'] + 1},
                       user.username == message.from_user.id)
 
-            print(db.search(user.username == message.from_user.id)[0][barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]])
-
             if barcodes[barcodes["id"].str.contains(bar_code)].min()["class"] == 'paper':
                 value_with_bonus = db.search(user.username == message.from_user.id)
 
@@ -172,7 +171,7 @@ async def get_type_of_barcode(message: types.Message):
 @dp.message_handler(commands=['stats'])
 async def stats(message: types.Message):
     user = Query()
-    template = Template("""Вами було накопичено загалом {{sum}} перерабатываемых продуктов: 
+    template = Template("""Вами було накопичено загалом {{sum}} переробляемих продуктів: 
 
 ПАПЕРУ 📰: {{paper}} шт.
 
@@ -183,7 +182,10 @@ async def stats(message: types.Message):
 СКЛО 🍾: {{glass}} шт.
 
 {% if x %}
+Ваш level: <b>{% if x == 0 %} У Вас нема накопичених балів! 😵 {% elif x < 500 %} Junior Розумний Переробник 👶 {% elif 500 < x < 1000 %} Middle Розумний Переробник 👦 {% elif 1000 < x < 10000 %} Senior Розумний Переробник 👨‍💻 {%else%} 👨‍🏫 MasterMind Розумний Переробник 👨‍🏫 {% endif %}</b>
+
 Ваші накопичені <b>"Бали Розумного Переробника"</b>: {{x}} 
+Для того, щоб верифікувати Ваші дані, будь ласка, здайте по інструкції вторсировину кур'єру або здайте сміття у найближчий пункт прийому вторсировини "Сільпо"
 {% endif %}
 """)
     await message.reply(template.render(sum=db.search(user.username == message.from_user.id)[0]['paper'] +
