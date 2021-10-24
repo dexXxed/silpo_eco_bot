@@ -8,6 +8,8 @@ import cv2
 import pandas as pd
 from dotenv import load_dotenv
 from tinydb import TinyDB, Query
+from random import randint
+from jinja2 import Template
 
 load_dotenv()
 
@@ -28,7 +30,6 @@ def barcode_reader(image):
     if not detected_barcodes:
         return ''
     else:
-        # Traverse through all the detected barcodes in image
         for barcode in detected_barcodes:
             if barcode.data != '':
                 return str(barcode.data.decode("utf-8"))
@@ -39,6 +40,8 @@ async def send_welcome(message: types.Message):
     response = """Привіт 🤗 
     
 Я  🤖, який допоможе посортувати твоє сміття!
+
+Відправ сюди фото штрих-кода з упаковки товару і ми підскажемо, чи підлягає дане сміття сортуванню! 
 
 Натисни:
 /how_it_works для розуміння логіки роботи 🤖 та дій користувача
@@ -51,9 +54,11 @@ async def send_welcome(message: types.Message):
                    'metal': 0,
                    'paper': 0,
                    'glass': 0,
-                   'plastic': 0})
-    await message.answer(response, parse_mode=ParseMode.HTML)\
-
+                   'plastic': 0,
+                   'bonus': 0})
+    await message.answer(response, parse_mode=ParseMode.HTML)
+    await bot.send_photo(message.from_user.id, open('./photos/example.jpg', 'rb'),
+                         caption='Приклад фото для сканування ботом 👀')
 
 
 @dp.message_handler(commands=['how_it_works'])
@@ -123,30 +128,75 @@ async def get_type_of_barcode(message: types.Message):
     if bar_code != '':
         if not barcodes[barcodes['id'].str.contains(bar_code)].empty:
             user = Query()
-            db.update({f'{barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]}': db.search(user.username == message.from_user.id)[0][f'{barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]}'] + 1 }, user.username == message.from_user.id)
+            db.update({f'{barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]}':
+                           db.search(user.username == message.from_user.id)[0]
+                           [f'{barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]}'] + 1},
+                      user.username == message.from_user.id)
 
-            await message.reply(f"Название товара: {barcodes[barcodes['id'].str.contains(bar_code)].min()['name']}\n"
-                                f"Тип товара: {barcodes[barcodes['id'].str.contains(bar_code)].min()['class']}",
+            print(db.search(user.username == message.from_user.id)[0][barcodes[barcodes["id"].str.contains(bar_code)].min()["class"]])
+
+            if barcodes[barcodes["id"].str.contains(bar_code)].min()["class"] == 'paper':
+                value_with_bonus = db.search(user.username == message.from_user.id)
+
+                db.update({'bonus': value_with_bonus[0]['bonus'] + randint(5, 15)},
+                          user.username == message.from_user.id)
+            elif barcodes[barcodes["id"].str.contains(bar_code)].min()["class"] == 'glass':
+                value_with_bonus = db.search(user.username == message.from_user.id)
+
+                db.update({'bonus': value_with_bonus[0]['bonus'] + randint(15, 30)},
+                          user.username == message.from_user.id)
+            elif barcodes[barcodes["id"].str.contains(bar_code)].min()["class"] == 'metal':
+                value_with_bonus = db.search(user.username == message.from_user.id)
+
+                db.update({'bonus': value_with_bonus[0]['bonus'] + randint(10, 25)},
+                          user.username == message.from_user.id)
+            elif barcodes[barcodes["id"].str.contains(bar_code)].min()["class"] == 'plastic':
+                value_with_bonus = db.search(user.username == message.from_user.id)
+
+                db.update({'bonus': value_with_bonus[0]['bonus'] + randint(1, 10)},
+                          user.username == message.from_user.id)
+
+            await message.reply(f"Назва товару: {barcodes[barcodes['id'].str.contains(bar_code)].min()['name']}\n\n"
+                                f"🎉 Юхуууу! Дана упаковка підлягає сортуванную, її клас сортування "
+                                f"<i>{barcodes[barcodes['id'].str.contains(bar_code)].min()['class_ukr']}</i>\n\n"
+                                f"Ви можете звернутися до команди /stats, "
+                                f"щоб переглянути загальну статистику по накопиченій вторсировині та кількість "
+                                f"<b>Балів Розумного Переробника</b> 😉",
                                 parse_mode=ParseMode.HTML)
         else:
-            await message.reply('Такой товар не перерабатывается!')
+            await message.reply('Такий товар не підлягає переробці!')
     else:
-        await message.reply("Повторите фото, считывание не удалось!")
+        await message.reply("Повторіть фото, зчитування штрихкоду не вдалося!")
 
 
 @dp.message_handler(commands=['stats'])
 async def stats(message: types.Message):
     user = Query()
-    await message.reply(f"""Вами було накопичено загалом {db.search(user.username == message.from_user.id)[0]['paper'] + db.search(user.username == message.from_user.id)[0]['plastic'] + db.search(user.username == message.from_user.id)[0]['metal'] + db.search(user.username == message.from_user.id)[0]['glass']} перерабатываемых продуктов: 
+    template = Template("""Вами було накопичено загалом {{sum}} перерабатываемых продуктов: 
 
-ПАПЕРУ 📰: {db.search(user.username == message.from_user.id)[0]['paper']} шт.
+ПАПЕРУ 📰: {{paper}} шт.
 
-ПЛАСТИК ♳: {db.search(user.username == message.from_user.id)[0]['plastic']} шт.
+ПЛАСТИК ♳: {{plastic}} шт.
 
-МЕТАЛ 🥫: {db.search(user.username == message.from_user.id)[0]['metal']} шт.
+МЕТАЛ 🥫: {{metal}} шт.
 
-СКЛО 🍾: {db.search(user.username == message.from_user.id)[0]['glass']} шт.
+СКЛО 🍾: {{glass}} шт.
+
+{% if x %}
+Ваші накопичені <b>"Бали Розумного Переробника"</b>: {{x}} 
+{% endif %}
 """)
+    await message.reply(template.render(sum=db.search(user.username == message.from_user.id)[0]['paper'] +
+                                                          db.search(user.username == message.from_user.id)[0]['plastic'] +
+                                                          db.search(user.username == message.from_user.id)[0]['metal'] +
+                                                          db.search(user.username == message.from_user.id)[0]['glass'],
+                                        paper=db.search(user.username == message.from_user.id)[0]['paper'],
+                                        plastic=db.search(user.username == message.from_user.id)[0]['plastic'],
+                                        metal=db.search(user.username == message.from_user.id)[0]['metal'],
+                                        glass=db.search(user.username == message.from_user.id)[0]['glass'],
+                                        x=db.search(user.username == message.from_user.id)[0]['bonus']),
+                        parse_mode=ParseMode.HTML)
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=False)

@@ -1,18 +1,18 @@
-id,name,class
-'4823063106221',Яблочний сік Sandora,paper
-'4820001448603',Мультивитамін Sandora,paper
-'4823063109017',Бананово-яблучно-полуничний нектар Sandora,paper
-'4823063116725',Манго нектар Sandora,paper
-'4820001448566',Вишневий нектар Sandora,paper
-'4820051240226',Карпатська Джерельна 0.5 Сильногазована,plastic
-'4820051240233',Карпатська Джерельна 0.5 Негазована,plastic
-'5999860497875',HELL Nova Cherry Beam,metal
-'5999860497899',HELL Arcade tropical Bomb,metal
-'5999860497080',HELL Slim Latte,metal
-'5999884034469',HELL Classic,metal
-'5999860497912',HELL PvP Coco Split,metal
-'5999860497073',HELL Latte,metal
-'4823105400096',Верес Солоні огірки,glass
-'4860019001346',Вода мінеральна Borjomi,glass
-'7501064199844',Пиво світле Corona,glass
-'4003301071881',Виний напій Latinium Sparkling,glass
+id,name,class,class_ukr
+'4823063106221',Яблочний сік Sandora,paper,'Папір'
+'4820001448603',Мультивитамін Sandora,paper,'Папір'
+'4823063109017',Бананово-яблучно-полуничний нектар Sandora,paper,'Папір'
+'4823063116725',Манго нектар Sandora,paper,'Папір'
+'4820001448566',Вишневий нектар Sandora,paper,'Папір'
+'4820051240226',Карпатська Джерельна 0.5 Сильногазована,plastic,'Пластик'
+'4820051240233',Карпатська Джерельна 0.5 Негазована,plastic,'Пластик'
+'5999860497875',HELL Nova Cherry Beam,metal,'Метал'
+'5999860497899',HELL Arcade tropical Bomb,metal,'Метал'
+'5999860497080',HELL Slim Latte,metal,'Метал'
+'5999884034469',HELL Classic,metal,'Метал'
+'5999860497912',HELL PvP Coco Split,metal,'Метал'
+'5999860497073',HELL Latte,metal,'Метал'
+'4823105400096',Верес Солоні огірки,glass,'Скло'
+'4860019001346',Вода мінеральна Borjomi,glass,'Скло'
+'7501064199844',Пиво світле Corona,glass,'Скло'
+'4003301071881',Виний напій Latinium Sparkling,glass,'Скло'
