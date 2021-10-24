@@ -3,8 +3,12 @@ FROM ubuntu
 RUN apt-get update && apt-get install -y software-properties-common build-essential
 RUN add-apt-repository ppa:deadsnakes/ppa
 
-ENV TZ=Europe/Kiev
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ENV TZ=Asia/Kolkata \
+    DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install tzdata
+
 
 RUN apt-get update && apt-get install -y python3.7 python3-pip python3.7-dev libpq-dev libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev libffi-dev
 RUN apt-get install -y git wget gcc python3.7-dev unzip zbar-tools libssl-dev
